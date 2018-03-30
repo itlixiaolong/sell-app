@@ -1,30 +1,59 @@
 <template>
+<div>
   <div class="shopcart">
-    <div class="left">
-      <div class="logo_wrapper">
-        <div class="logo" :class="{'hignLight':totalNum>0}">
-          <span class="icon-shopping_cart"></span>
+    <div class="content" @click="toggle">
+      <div class="left">
+        <div class="logo_wrapper">
+          <div class="logo" :class="{'hignLight':totalNum>0}">
+            <span class="icon-shopping_cart"></span>
+          </div>
+          <span class="total_num" v-show="totalNum>0">{{totalNum}}</span>
         </div>
-        <span class="total_num" v-show="totalNum>0">{{totalNum}}</span>
+        <div class="price" :class="{'hignLight':totalNum>0}">¥{{totalPrice}}</div>
+        <div class="cost">另需配送费¥{{deliveryPrice}}元</div>
       </div>
-      <div class="price" :class="{'hignLight':totalNum>0}">¥{{totalPrice}}</div>
-      <div class="cost">另需配送费¥{{deliveryPrice}}元</div>
+      <div class="right" :class="{'hignLight':this.totalPrice>=this.minPrice}">
+        {{payDescription}}
+      </div>
     </div>
-    <div class="right" :class="{'hignLight':this.totalPrice>=this.minPrice}">
-      {{payDescription}}
+    <div class="ball-container">
+      <div v-for="(ball,index) in balls" :key="index">
+        <transition name="drop" @before-enter="beforeDrop" @enter="dropping" @after-enter="afterDrop">
+          <div class="ball" v-show="ball.show">
+            <div class="inner inner-hook"></div>
+          </div>
+        </transition>
+      </div>
     </div>
-     <div class="ball-container">
-        <div v-for="(ball,index) in balls" :key="index">
-          <transition name="drop" @before-enter="beforeDrop" @enter="dropping" @after-enter="afterDrop">
-            <div class="ball" v-show="ball.show">
-              <div class="inner inner-hook"></div>
-            </div>
-          </transition>
+    <transition name="fold">
+      <div class="shopcart_list" v-show="this.fold">
+        <div class="list_header">
+          <div class="left_cart">购物车</div>
+          <div class="right_empty">清空</div>
+        </div>
+        <div class="list_content">
+          <ul>
+            <li class="list_item" v-for="(food,index) in this.selectFood" :key="index">
+              <span class="goods_name">{{food.name}}</span>
+              <div class="goods_controll_box">
+                <span class="goods_price">￥{{food.price*food.count}}</span>
+                <div class="cartcontroll_wrapper">
+                  <Cartcontroll :food="food" @add="addFood"/>
+                </div>
+              </div>
+            </li>
+          </ul>
         </div>
       </div>
+      </transition>
   </div>
+  <transition name="fade">
+    <div class="list-mask" @click="hideList" v-show="fold"></div>
+  </transition>
+</div>
 </template>
 <script>
+import Cartcontroll from '../CartControll/CartControll'
 export default {
   props: {
     selectFood: {
@@ -64,10 +93,23 @@ export default {
           show: false
         }
       ],
-      dropBalls: []
+      dropBalls: [],
+      fold: false
     }
   },
   methods: {
+    hideList () {
+      this.fold = false
+    },
+    toggle () {
+      if (!this.totalNum) {
+        return false
+      }
+      this.fold = !this.fold
+    },
+    addFood (target) {
+      this._drop(target)
+    },
     drop (targetEle) {
       for (let ball of this.balls) {
         if (!ball.show) {
@@ -138,99 +180,105 @@ export default {
         return `去结算`
       }
     }
+  },
+  components: {
+    Cartcontroll
   }
 }
 </script>
 
 <style lang="stylus" scoped>
+@import '../../common/stylus/mixin'
 .shopcart
   position fixed
   bottom 0
   left 0
+  z-index 50
   width 100%
   height 48px
-  display flex
-  background #141d27
-  .left
-    flex 1
-    font-size 0
-    .logo_wrapper
-      display inline-block
-      width 56px
-      height 56px
-      border-radius 50%
-      background-color #141d27
-      margin-top -10px
-      margin-left 12px
-      position relative
-      .logo
-        width 44px
-        height 44px
-        line-height 53px
-        text-align center
+  .content
+    display flex
+    background #141d27
+    .left
+      flex 1
+      font-size 0
+      .logo_wrapper
+        display inline-block
+        width 56px
+        height 56px
         border-radius 50%
-        background #2b343c
-        position absolute
-        top 6px
-        left 6px
-        display flex
-        align-items center
-        justify-content center
-        &.hignLight
-          background: rgb(0, 160, 220)
+        background-color #141d27
+        margin-top -10px
+        margin-left 12px
+        position relative
+        .logo
+          width 44px
+          height 44px
+          line-height 53px
+          text-align center
+          border-radius 50%
+          background #2b343c
+          position absolute
+          top 6px
+          left 6px
+          display flex
+          align-items center
+          justify-content center
+          &.hignLight
+            background: rgb(0, 160, 220)
+            .icon-shopping_cart
+              color #fff
           .icon-shopping_cart
-            color #fff
-        .icon-shopping_cart
-            font-size 24px
-            line-height  24px
-            color rgba(255,255,255,.4)
-      .total_num
-        position: absolute
-        top: 0
-        right: 0
-        width: 24px
-        height: 16px
-        line-height: 16px
-        text-align: center
-        border-radius: 16px
-        font-size: 9px
-        font-weight: 700
-        color: #fff
-        background: rgb(240, 20, 20)
-        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.4)
-    .price
-      display inline-block
-      vertical-align: top
-      margin 12px 0
-      padding 0 12px
-      font-size 16px
-      line-height 24px
+              font-size 24px
+              line-height  24px
+              color rgba(255,255,255,.4)
+        .total_num
+          position: absolute
+          top: 0
+          right: 0
+          width: 24px
+          height: 16px
+          line-height: 16px
+          text-align: center
+          border-radius: 16px
+          font-size: 9px
+          font-weight: 700
+          color: #fff
+          background: rgb(240, 20, 20)
+          box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.4)
+      .price
+        display inline-block
+        vertical-align: top
+        margin 12px 0
+        padding 0 12px
+        font-size 16px
+        line-height 24px
+        color rgba(255,255,255,.4)
+        font-weight 700
+        letter-spacing 2px
+        border-right 1px solid rgba(255,255,255,.1)
+        &.hignLight
+          color #fff
+      .cost
+        display inline-block
+        font-size 10px
+        font-weight 700
+        color rgba(255,255,255,.4)
+        line-height 24px
+        padding 12px
+        vertical-align: top
+    .right
+      flex 0 0 105px
+      background #2b343c
+      padding 8px 12px
+      font-size 12px
       color rgba(255,255,255,.4)
+      line-height 32px
       font-weight 700
-      letter-spacing 2px
-      border-right 1px solid rgba(255,255,255,.1)
+      text-align center
       &.hignLight
-        color #fff
-    .cost
-      display inline-block
-      font-size 10px
-      font-weight 700
-      color rgba(255,255,255,.4)
-      line-height 24px
-      padding 12px
-      vertical-align: top
-  .right
-    flex 0 0 105px
-    background #2b343c
-    padding 8px 12px
-    font-size 12px
-    color rgba(255,255,255,.4)
-    line-height 32px
-    font-weight 700
-    text-align center
-    &.hignLight
-      background: #00b43c
-      color: #fff
+        background: #00b43c
+        color: #fff
   .ball-container
       .ball
         position: fixed
@@ -244,4 +292,78 @@ export default {
           border-radius: 50%
           background: rgb(0, 160, 220)
           transition: all 0.4s linear
+  .shopcart_list
+    width 100%
+    max-height 611px
+    position: absolute
+    left: 0
+    top: 0
+    z-index: -100
+    transform: translate3d(0, -100%, 0)
+    &.fold-enter, &.fold-leave-to
+      transform: translate3d(0, 0, 0)
+    &.fold-enter-active, &.fold-leave-active
+      transition: all 0.5s
+    &.fold-enter-to, &.fold-leave
+      transform: translate3d(0, -100%, 0)
+    .list_header
+      display flex
+      justify-content space-between
+      align-items center
+      padding 0 18px
+      height 40px
+      line-height 40px
+      width 100%
+      box-sizing border-box
+      background: #f3f5f7
+      border-bottom: 1px solid rgba(7, 17, 27, 0.1)
+      .left_cart
+        height 40px
+        font-size 14px
+        color: rgb(7, 17, 27)
+      .right_empty
+        font-size: 12px
+        color: rgb(0, 160, 220)
+  .list_content
+    background-color #fff
+    .list_item
+      width 100%
+      padding 12px 18px
+      box-sizing border-box
+      height 48px
+      font-size 0px
+      border_1px(rgba(7,17,27,.1))
+      display flex
+      justify-content space-between
+      align-items center
+      .goods_name
+        font-size 14px
+        line-height 24px
+        color rgb(7,17,27)
+      .goods_controll_box
+        display flex
+        align-items center
+        .goods_price
+          font-size 14px
+          font-weight 700
+          color rgb(240,20,20)
+          line-height 24px
+        .cartcontroll_wrapper
+          display inline-block
+          margin-left 12px
+.list-mask
+  position: fixed
+  top: 0
+  left: 0
+  width: 100%
+  height: 100%
+  z-index: 40
+  backdrop-filter: blur(10px)
+  opacity: 1
+  background: rgba(7, 17, 27, 0.6)
+  &.fade-enter-active, &.fade-leave-active
+    transition: all 0.5s
+  &.fade-enter, &.fade-leave-active
+    opacity: 0
+    background: rgba(7, 17, 27, 0)
 </style>

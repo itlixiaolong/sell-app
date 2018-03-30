@@ -95,7 +95,6 @@ export default {
     this.$http.get('./goods').then((response) => {
       if (response.body.errnumber === ERR_NO) {
         this.goods = response.body.data
-        console.log(this.goods)
         this.$nextTick(() => {
           this._init_scroll()
           this._calculateHeight()
@@ -106,7 +105,7 @@ export default {
   methods: {
     _init_scroll () {
       this.menuScroll = new BeScroll(this.$refs.menuWrapper, {
-        // click: true
+        click: true
       })
       this.foodsScroll = new BeScroll(this.$refs.foodsWrapper, {
         click: true, // 这样在添加商品数量上就可以执行点击事件了
