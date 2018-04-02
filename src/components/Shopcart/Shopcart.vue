@@ -26,12 +26,12 @@
       </div>
     </div>
     <transition name="fold">
-      <div class="shopcart_list" v-show="this.fold">
+      <div class="shopcart_list" v-show="this.fold&&isNoSelectFood">
         <div class="list_header">
           <div class="left_cart">购物车</div>
           <div class="right_empty">清空</div>
         </div>
-        <div class="list_content">
+        <div class="list_content" ref="listContent">
           <ul>
             <li class="list_item" v-for="(food,index) in this.selectFood" :key="index">
               <span class="goods_name">{{food.name}}</span>
@@ -48,11 +48,13 @@
       </transition>
   </div>
   <transition name="fade">
-    <div class="list-mask" @click="hideList" v-show="fold"></div>
+    <div class="list-mask" @click="hideList" v-show="fold&&isNoSelectFood"></div>
   </transition>
 </div>
 </template>
 <script>
+import BScroll from 'better-scroll'
+import isEmpty from 'lodash/fp/isEmpty' // lodash库的按需加载
 import Cartcontroll from '../CartControll/CartControll'
 export default {
   props: {
@@ -106,9 +108,20 @@ export default {
         return false
       }
       this.fold = !this.fold
+      if (this.fold) {
+        this.$nextTick(() => {
+          if (!this.scroll) {
+            this.scroll = new BScroll(this.$refs.listContent, {
+              click: true
+            })
+          } else {
+            this.scroll.refresh()
+          }
+        })
+      }
     },
     addFood (target) {
-      this._drop(target)
+      this.drop(target)
     },
     drop (targetEle) {
       for (let ball of this.balls) {
@@ -178,6 +191,13 @@ export default {
         return `还差¥${diff}云起送`
       } else {
         return `去结算`
+      }
+    },
+    isNoSelectFood () {
+      if (!isEmpty(this.selectFood)) {
+        return true
+      } else {
+        return false
       }
     }
   },
@@ -294,7 +314,6 @@ export default {
           transition: all 0.4s linear
   .shopcart_list
     width 100%
-    max-height 611px
     position: absolute
     left: 0
     top: 0
@@ -326,6 +345,8 @@ export default {
         color: rgb(0, 160, 220)
   .list_content
     background-color #fff
+    max-height 217px
+    overflow hidden
     .list_item
       width 100%
       padding 12px 18px
