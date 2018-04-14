@@ -42,7 +42,7 @@
         </ul>
     </div>
     <Shopcart :deliveryPrice="seller.deliveryPrice" :minPrice="seller.minPrice" :selectFood="selectFood" ref="shopcart"/>
-    <FoodDteail :foodDetail="this.choosedFood"/>
+    <FoodDteail :foodDetail="this.choosedFood" ref="foodDtatil" @add="addFood" />
   </div>
 </template>
 
@@ -111,6 +111,7 @@ export default {
         return false
       }
       this.choosedFood = food
+      this.$refs.foodDtatil.showFoodDetail()
     },
     _init_scroll () {
       this.menuScroll = new BeScroll(this.$refs.menuWrapper, {
