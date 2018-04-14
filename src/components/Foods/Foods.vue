@@ -15,7 +15,7 @@
           <li v-for="(item,index) in goods" class="food-list" ref="foodList" :key="index">
             <h1 class="title">{{item.name}}</h1>
             <ul>
-              <li v-for="(food,index) in item.foods" class="food-item border_1px"  :key="index">
+              <li v-for="(food,index) in item.foods" class="food-item border_1px"  :key="index" @click="chooseThisFood(food)">
                 <div class="icon">
                   <img width="57" height="57" :src="food.icon">
                 </div>
@@ -42,6 +42,7 @@
         </ul>
     </div>
     <Shopcart :deliveryPrice="seller.deliveryPrice" :minPrice="seller.minPrice" :selectFood="selectFood" ref="shopcart"/>
+    <FoodDteail :foodDetail="this.choosedFood"/>
   </div>
 </template>
 
@@ -49,6 +50,7 @@
 import BeScroll from 'better-scroll'
 import Shopcart from '../Shopcart/Shopcart'
 import Cartcontrol from '../CartControll/CartControll'
+import FoodDteail from '../FoodDetail/FoodDetail'
 const ERR_NO = 0
 export default {
   props: {
@@ -64,7 +66,8 @@ export default {
     return {
       goods: [],
       listHeight: [],
-      scrollY: 0
+      scrollY: 0,
+      choosedFood: {}
     }
   },
   computed: {
@@ -103,6 +106,12 @@ export default {
     })
   },
   methods: {
+    chooseThisFood (food) {
+      if (!event._constructed) {
+        return false
+      }
+      this.choosedFood = food
+    },
     _init_scroll () {
       this.menuScroll = new BeScroll(this.$refs.menuWrapper, {
         click: true
@@ -137,15 +146,15 @@ export default {
     },
     _drop (target) {
       // 体验优化,异步执行下落动画
-      // this.$nextTick(() => {
-      //   this.$refs.shopcart.drop(target)
-      // })
-      this.$refs.shopcart.drop(target)
+      this.$nextTick(() => {
+        this.$refs.shopcart.drop(target)
+      })
     }
   },
   components: {
     Shopcart,
-    Cartcontrol
+    Cartcontrol,
+    FoodDteail
   }
 }
 </script>
