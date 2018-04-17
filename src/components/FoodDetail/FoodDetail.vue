@@ -16,7 +16,9 @@
         <div class="price_box">
           <span class="new_price">¥{{foodDetail.price}}</span><span class="old_price" v-show="foodDetail.oldPrice">¥{{foodDetail.oldPrice}}</span>
         </div>
-        <div class="join_cart" v-show="!foodDetail.count||foodDetail.count===0" @click="joinCart">加入购物车</div>
+       <transition name="fade">
+          <div class="join_cart" v-show="!foodDetail.count||foodDetail.count===0" @click="joinCart">加入购物车</div>
+        </transition>
         <div class="cart_controll_wrapper">
           <CartControll :food="foodDetail" @add="addFood" />
         </div>
@@ -147,6 +149,7 @@ export default {
       position absolute
       bottom 18px
       right 18px
+      z-index 5
       height 24px
       line-height 24px
       box-sizing border-box
@@ -156,11 +159,15 @@ export default {
       background rgb(0, 160,220)
       color #ffffff
       font-size 10px
+      &.fade-enter,&.fade-leave-to
+        opacity 0
+      &.fade-enter-active,&.fade-leave-active
+        transition all .3s ease
     .cart_controll_wrapper
       position absolute
       bottom 12px
       right 18px
-      z-index -1
+      z-index 4
   .block_line
     width 100%
     height 16px
