@@ -17,16 +17,23 @@
           <span class="new_price">¥{{foodDetail.price}}</span><span class="old_price" v-show="foodDetail.oldPrice">¥{{foodDetail.oldPrice}}</span>
         </div>
        <transition name="fade">
-          <div class="join_cart" v-show="!foodDetail.count||foodDetail.count===0" @click="joinCart">加入购物车</div>
+          <div class="join_cart" v-show="!foodDetail.count||foodDetail.count===0" @click.stop="joinCart">加入购物车</div>
         </transition>
         <div class="cart_controll_wrapper">
           <CartControll :food="foodDetail" @add="addFood" />
         </div>
       </div>
-      <div class="block_line"></div>
-      <div class="food_introduce">
+      <div class="block_line" v-show="foodDetail.info"></div>
+      <div class="food_introduce" v-show="foodDetail.info">
         <h3 class="introduce_tittle">商品介绍</h3>
         <p class="introduce_content">{{foodDetail.info}}</p>
+      </div>
+      <Split v-show="foodDetail.ratings"></Split>
+       <div class="food_ratings" v-show="foodDetail.ratings">
+        <h3 class="food_ratings_tittle">商品评价</h3>
+        <div class="food_ratings_content">
+          <RatingSelect :selectType="selectType" :onlyContent="onlyContent" :description="desc" :ratings="foodDetail.ratings"></RatingSelect>
+        </div>
       </div>
     </div>
   </div>
@@ -36,6 +43,11 @@
 import BScroll from 'better-scroll'
 import Vue from 'vue'
 import CartControll from '../CartControll/CartControll'
+import Split from '../Split/Split'
+import RatingSelect from '../RatingSelect/RatingSelect'
+// const POSTIVE = 0
+// const NAGTIVE = 1
+const ALL = 2
 export default {
   props: {
     foodDetail: {
@@ -44,12 +56,21 @@ export default {
   },
   data () {
     return {
-      showflag: false
+      showflag: false,
+      selectType: ALL,
+      onlyContent: true,
+      desc: {
+        all: '全部',
+        positive: '推荐',
+        negative: '吐槽'
+      }
     }
   },
   methods: {
     showFoodDetail () {
       this.showflag = true
+      this.selectType = ALL
+      this.onlyContent = true
       this.$nextTick(() => {
         if (!this.scroll) {
           this.scroll = new BScroll(this.$refs.foodDetail, {
@@ -75,7 +96,9 @@ export default {
     }
   },
   components: {
-    CartControll
+    CartControll,
+    Split,
+    RatingSelect
   }
 }
 </script>
@@ -145,6 +168,8 @@ export default {
         font-weight 700
         color rgb(147,153,159)
         line-height 24px
+        margin-left 12px
+        text-decoration line-through
     .join_cart
       position absolute
       bottom 18px
@@ -188,4 +213,14 @@ export default {
       font-weight 200
       line-height 24px
       color rgb(77,85,93)
+  .food_ratings
+    width 100%
+    padding-top 18px
+    box-sizing border-box
+    .food_ratings_tittle
+      padding-left 18px
+      line-height 14px
+      margin-bottom 6px
+      font-size 14px
+      color rgb(7, 17, 27)
 </style>
