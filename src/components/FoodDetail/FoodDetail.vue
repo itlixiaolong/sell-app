@@ -32,7 +32,7 @@
        <div class="food_ratings" v-show="foodDetail.ratings">
         <h3 class="food_ratings_tittle">商品评价</h3>
         <div class="food_ratings_content">
-          <RatingSelect :selectType="selectType" :onlyContent="onlyContent" :description="desc" :ratings="foodDetail.ratings"></RatingSelect>
+          <RatingSelect @toggleOnlyContent="toggleContent" @select="selectTypeChange" :selectType="selectType" :onlyContent="onlyContent" :description="desc" :ratings="foodDetail.ratings"></RatingSelect>
         </div>
       </div>
     </div>
@@ -93,6 +93,12 @@ export default {
     },
     addFood (target) {
       this.$emit('add', target)
+    },
+    selectTypeChange (type) {
+      this.selectType = type
+    },
+    toggleContent (bool) {
+      this.onlyContent = !bool
     }
   },
   components: {
