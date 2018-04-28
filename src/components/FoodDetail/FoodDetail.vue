@@ -33,6 +33,22 @@
         <h3 class="food_ratings_tittle">商品评价</h3>
         <div class="food_ratings_content">
           <RatingSelect @toggleOnlyContent="toggleContent" @select="selectTypeChange" :selectType="selectType" :onlyContent="onlyContent" :description="desc" :ratings="foodDetail.ratings"></RatingSelect>
+          <div class="rating_wrapper">
+            <ul v-show="foodDetail.ratings&&foodDetail.ratings.length">
+              <li class="rating_item" v-for="(item,index) in foodDetail.ratings" :key="index">
+                <div class="user">
+                  <span class="userName">{{item.username}}</span>
+                  <img :src="item.avatar" alt="" width="12" height="12" class="avatar">
+                </div>
+                <div class="rating_time">{{item.rateTime}}</div>
+                <div class="rating_content">
+                  <span :class="{'icon-thumb_up':item.rateType===0,'icon-thumb_down':item.rateType===1}"></span>
+                  {{item.text}}
+                </div>
+              </li>
+            </ul>
+            <div class="no_ratings" v-show="!foodDetail.ratings||foodDetail.length===0"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -229,4 +245,42 @@ export default {
       margin-bottom 6px
       font-size 14px
       color rgb(7, 17, 27)
+    .food_ratings_content
+      .rating_wrapper
+        padding 0 18px
+        .rating_item
+          position relative
+          padding 16px 0px
+          border_1px(rgba(7,17,27,0.1))
+          .user
+            position absolute
+            top 16px
+            right 0
+            font-size 0
+            line-height 12px
+            .userName
+              display inline-block
+              color rgb(147,153,159)
+              font-size 10px
+              vertical-align top
+              margin-right 6px
+            .avatar
+              border-radius 50%
+          .rating_time
+            margin-bottom 6px
+            font-size 10px
+            line-height 12px
+            color rgb(147,153,159)
+          .rating_content
+            line-height 16px
+            font-size 12px
+            color rgb(7,17,27)
+            .icon-thumb_up,.icon-thumb_down
+              line-height 16px
+              margin-right 4px
+              font-size 12px
+            .icon-thumb_up
+              color rgb(0,160,220)
+            .icon-thumb_down
+              color rgb(147,153,159)
 </style>
