@@ -16,15 +16,40 @@
         <div class="price_box">
           <span class="new_price">¥{{foodDetail.price}}</span><span class="old_price" v-show="foodDetail.oldPrice">¥{{foodDetail.oldPrice}}</span>
         </div>
-        <div class="join_cart" v-show="!foodDetail.count||foodDetail.count===0" @click="joinCart">加入购物车</div>
+       <transition name="fade">
+          <div class="join_cart" v-show="!foodDetail.count||foodDetail.count===0" @click.stop="joinCart">加入购物车</div>
+        </transition>
         <div class="cart_controll_wrapper">
           <CartControll :food="foodDetail" @add="addFood" />
         </div>
       </div>
-      <div class="block_line"></div>
-      <div class="food_introduce">
+      <div class="block_line" v-show="foodDetail.info"></div>
+      <div class="food_introduce" v-show="foodDetail.info">
         <h3 class="introduce_tittle">商品介绍</h3>
         <p class="introduce_content">{{foodDetail.info}}</p>
+      </div>
+      <Split v-show="foodDetail.ratings"></Split>
+       <div class="food_ratings" v-show="foodDetail.ratings">
+        <h3 class="food_ratings_tittle">商品评价</h3>
+        <div class="food_ratings_content">
+          <RatingSelect @toggleOnlyContent="toggleContent" @select="selectTypeChange" :selectType="selectType" :onlyContent="onlyContent" :description="desc" :ratings="foodDetail.ratings"></RatingSelect>
+          <div class="rating_wrapper">
+            <ul v-show="foodDetail.ratings&&foodDetail.ratings.length">
+              <li class="rating_item" v-for="(item,index) in foodDetail.ratings" :key="index" v-show="needShow(item.rateType,item.text)">
+                <div class="user">
+                  <span class="userName">{{item.username}}</span>
+                  <img :src="item.avatar" alt="" width="12" height="12" class="avatar">
+                </div>
+                <div class="rating_time">{{item.rateTime|formatDate}}</div>
+                <div class="rating_content">
+                  <span :class="{'icon-thumb_up':item.rateType===0,'icon-thumb_down':item.rateType===1}"></span>
+                  {{item.text}}
+                </div>
+              </li>
+            </ul>
+            <div class="no_ratings" v-show="!foodDetail.ratings||foodDetail.ratings.length===0">暂无评价</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -34,6 +59,12 @@
 import BScroll from 'better-scroll'
 import Vue from 'vue'
 import CartControll from '../CartControll/CartControll'
+import Split from '../Split/Split'
+import RatingSelect from '../RatingSelect/RatingSelect'
+import {formatDate} from '../../common/js/date'
+// const POSTIVE = 0
+// const NAGTIVE = 1
+const ALL = 2
 export default {
   props: {
     foodDetail: {
@@ -42,12 +73,21 @@ export default {
   },
   data () {
     return {
-      showflag: false
+      showflag: false,
+      selectType: ALL,
+      onlyContent: true,
+      desc: {
+        all: '全部',
+        positive: '推荐',
+        negative: '吐槽'
+      }
     }
   },
   methods: {
     showFoodDetail () {
       this.showflag = true
+      this.selectType = ALL
+      this.onlyContent = true
       this.$nextTick(() => {
         if (!this.scroll) {
           this.scroll = new BScroll(this.$refs.foodDetail, {
@@ -70,10 +110,40 @@ export default {
     },
     addFood (target) {
       this.$emit('add', target)
+    },
+    selectTypeChange (type) {
+      this.selectType = type
+      this.$nextTick(() => {
+        this.scroll.refresh()
+      })
+    },
+    toggleContent (bool) {
+      this.onlyContent = !bool
+      this.$nextTick(() => {
+        this.scroll.refresh()
+      })
+    },
+    needShow (type, text) {
+      if (this.onlyContent && !text) {
+        return false
+      }
+      if (this.selectType === ALL) {
+        return true
+      } else {
+        return type === this.selectType
+      }
+    }
+  },
+  filters: {
+    formatDate (time) {
+      let date = new Date(time)
+      return formatDate(date, 'yyyy-mm-dd hh:mm')
     }
   },
   components: {
-    CartControll
+    CartControll,
+    Split,
+    RatingSelect
   }
 }
 </script>
@@ -143,10 +213,13 @@ export default {
         font-weight 700
         color rgb(147,153,159)
         line-height 24px
+        margin-left 12px
+        text-decoration line-through
     .join_cart
       position absolute
       bottom 18px
       right 18px
+      z-index 5
       height 24px
       line-height 24px
       box-sizing border-box
@@ -156,11 +229,15 @@ export default {
       background rgb(0, 160,220)
       color #ffffff
       font-size 10px
+      &.fade-enter,&.fade-leave-to
+        opacity 0
+      &.fade-enter-active,&.fade-leave-active
+        transition all .3s ease
     .cart_controll_wrapper
       position absolute
       bottom 12px
       right 18px
-      z-index -1
+      z-index 4
   .block_line
     width 100%
     height 16px
@@ -181,4 +258,56 @@ export default {
       font-weight 200
       line-height 24px
       color rgb(77,85,93)
+  .food_ratings
+    width 100%
+    padding-top 18px
+    box-sizing border-box
+    .food_ratings_tittle
+      padding-left 18px
+      line-height 14px
+      margin-bottom 6px
+      font-size 14px
+      color rgb(7, 17, 27)
+    .food_ratings_content
+      .rating_wrapper
+        padding 0 18px
+        .rating_item
+          position relative
+          padding 16px 0px
+          border_1px(rgba(7,17,27,0.1))
+          .user
+            position absolute
+            top 16px
+            right 0
+            font-size 0
+            line-height 12px
+            .userName
+              display inline-block
+              color rgb(147,153,159)
+              font-size 10px
+              vertical-align top
+              margin-right 6px
+            .avatar
+              border-radius 50%
+          .rating_time
+            margin-bottom 6px
+            font-size 10px
+            line-height 12px
+            color rgb(147,153,159)
+          .rating_content
+            line-height 16px
+            font-size 12px
+            color rgb(7,17,27)
+            .icon-thumb_up,.icon-thumb_down
+              line-height 16px
+              margin-right 4px
+              font-size 12px
+            .icon-thumb_up
+              color rgb(0,160,220)
+            .icon-thumb_down
+              color rgb(147,153,159)
+        .no_ratings
+          padding 16px 0
+          font-size 12px
+          color rgb(147,153,159)
 </style>
