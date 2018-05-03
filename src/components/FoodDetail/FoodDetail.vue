@@ -35,19 +35,19 @@
           <RatingSelect @toggleOnlyContent="toggleContent" @select="selectTypeChange" :selectType="selectType" :onlyContent="onlyContent" :description="desc" :ratings="foodDetail.ratings"></RatingSelect>
           <div class="rating_wrapper">
             <ul v-show="foodDetail.ratings&&foodDetail.ratings.length">
-              <li class="rating_item" v-for="(item,index) in foodDetail.ratings" :key="index">
+              <li class="rating_item" v-for="(item,index) in foodDetail.ratings" :key="index" v-show="needShow(item.rateType,item.text)">
                 <div class="user">
                   <span class="userName">{{item.username}}</span>
                   <img :src="item.avatar" alt="" width="12" height="12" class="avatar">
                 </div>
-                <div class="rating_time">{{item.rateTime}}</div>
+                <div class="rating_time">{{item.rateTime|formatDate}}</div>
                 <div class="rating_content">
                   <span :class="{'icon-thumb_up':item.rateType===0,'icon-thumb_down':item.rateType===1}"></span>
                   {{item.text}}
                 </div>
               </li>
             </ul>
-            <div class="no_ratings" v-show="!foodDetail.ratings||foodDetail.length===0"></div>
+            <div class="no_ratings" v-show="!foodDetail.ratings||foodDetail.ratings.length===0">暂无评价</div>
           </div>
         </div>
       </div>
@@ -61,6 +61,7 @@ import Vue from 'vue'
 import CartControll from '../CartControll/CartControll'
 import Split from '../Split/Split'
 import RatingSelect from '../RatingSelect/RatingSelect'
+import {formatDate} from '../../common/js/date'
 // const POSTIVE = 0
 // const NAGTIVE = 1
 const ALL = 2
@@ -112,9 +113,31 @@ export default {
     },
     selectTypeChange (type) {
       this.selectType = type
+      this.$nextTick(() => {
+        this.scroll.refresh()
+      })
     },
     toggleContent (bool) {
       this.onlyContent = !bool
+      this.$nextTick(() => {
+        this.scroll.refresh()
+      })
+    },
+    needShow (type, text) {
+      if (this.onlyContent && !text) {
+        return false
+      }
+      if (this.selectType === ALL) {
+        return true
+      } else {
+        return type === this.selectType
+      }
+    }
+  },
+  filters: {
+    formatDate (time) {
+      let date = new Date(time)
+      return formatDate(date, 'yyyy-mm-dd hh:mm')
     }
   },
   components: {
@@ -283,4 +306,8 @@ export default {
               color rgb(0,160,220)
             .icon-thumb_down
               color rgb(147,153,159)
+        .no_ratings
+          padding 16px 0
+          font-size 12px
+          color rgb(147,153,159)
 </style>
