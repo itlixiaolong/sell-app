@@ -1,5 +1,5 @@
 <template>
-  <div class="ratings">
+  <div class="ratings" ref="ratings">
     <div class="ratings_content">
       <div class="overView">
         <div class="overView_left">
@@ -7,13 +7,63 @@
           <div class="tittle">综合评分</div>
           <div class="rank">高于周边商家{{seller.rankRate}}%</div>
         </div>
-        <div class="overView_right"></div>
+        <div class="overView_right">
+          <div class="score_wrapper">
+            <span class="tittle">服务态度</span>
+            <Star :size="36" :score="seller.serviceScore"></Star>
+            <span class="score">{{seller.serviceScore}}</span>
+          </div>
+          <div class="score_wrapper">
+            <span class="tittle">商品评分</span>
+            <Star :size="36" :score="seller.foodScore"></Star>
+            <span class="score">{{seller.foodScore}}</span>
+          </div>
+          <div class="delivery_wrapper">
+            <span class="tittle">送达时间</span>
+            <span class="delivery">{{seller.deliveryTime}}分钟</span>
+          </div>
+        </div>
+      </div>
+      <Split></Split>
+      <RatingSelect :ratings="ratings" :selectType="selectType" :onlyContent="onlyContent" @select="selectTypeChange" @toggleOnlyContent="toggleContent"></RatingSelect>
+       <div class="ratings_wrapper">
+        <ul>
+          <li class="ratings_item" v-for="(item,index) in ratings" :key="index" v-show="needShow(item.rateType,item.text)">
+            <div class="avatar">
+              <img width="28" height="28" :src="item.avatar">
+            </div>
+            <div class="content">
+              <h1 class="name">{{item.username}}</h1>
+              <div class="star_wrapper">
+                <Star :size="24" :score="item.score"></Star>
+                <span class="delivery" v-show="item.deliveryTime">{{item.deliveryTime}}</span>
+              </div>
+              <p class="text">{{item.text}}</p>
+              <div class="recommend" v-show="item.recommend && item.recommend.length">
+                <span class="icon-thumb_up"></span>
+                <span class="item" v-for="(item,index) in item.recommend" :key="index">{{item}}</span>
+              </div>
+              <div class="time">
+                {{item.rateTime | formatDate}}
+              </div>
+            </div>
+          </li>
+        </ul>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import BScroll from 'better-scroll'
+import Star from '../Star/Star'
+import Split from '../Split/Split'
+import RatingSelect from '../RatingSelect/RatingSelect'
+import {formatDate} from '../../common/js/date'
+const ALL = 2
+const ERR_OK = 0
+const debug = process.env.NODE_ENV !== 'production'
+
 export default {
   props: {
     seller: {
@@ -22,11 +72,67 @@ export default {
         return {}
       }
     }
+  },
+  data () {
+    return {
+      ratings: [],
+      selectType: ALL,
+      onlyContent: true
+    }
+  },
+  methods: {
+    needShow (type, text) {
+      if (this.onlyContent && !text) {
+        return false
+      }
+      if (this.selectType === ALL) {
+        return true
+      } else {
+        return type === this.selectType
+      }
+    },
+    selectTypeChange (type) {
+      this.selectType = type
+      this.$nextTick(() => {
+        this.scroll.refresh()
+      })
+    },
+    toggleContent (bool) {
+      this.onlyContent = !bool
+      this.$nextTick(() => {
+        this.scroll.refresh()
+      })
+    }
+  },
+  filters: {
+    formatDate (time) {
+      let date = new Date(time)
+      return formatDate(date, 'yyyy-MM-dd hh:mm')
+    }
+  },
+  created () {
+    const url = debug ? '/ratings' : 'http://ustbhuangyi.com/sell/ratings'
+    this.$http.get(url).then((response) => {
+      if (response.body.errnumber === ERR_OK) {
+        this.ratings = response.body.data
+        this.$nextTick(() => {
+          this.scroll = new BScroll(this.$refs.ratings, {
+            click: true
+          })
+        })
+      }
+    })
+  },
+  components: {
+    Star,
+    Split,
+    RatingSelect
   }
 }
 </script>
 
 <style lang="stylus" scoped>
+@import '../../common/stylus/mixin'
 .ratings
   position absolute
   top 174px
@@ -42,6 +148,9 @@ export default {
       flex 0 0 137px
       border-right 1px solid rgba(7,17,27,.1)
       text-align center
+      @media only screen and (max-width: 320px)
+        flex: 0 0 120px
+        width: 120px
       .score
         margin-bottom 6px
         line-height 28px
@@ -58,5 +167,95 @@ export default {
         color rgb(147,153,159)
     .overView_right
       flex 1
-      padding-left 24px
+      padding: 6px 0 6px 24px
+      @media only screen and (max-width: 320px)
+        padding-left: 6px
+      .score_wrapper
+        margin-bottom 8px
+        font-size 0
+        .tittle
+          display inline-block
+          line-height 18px
+          vertical-align top
+          font-size 12px
+          color rgb(7,17,27)
+        .star
+          display inline-block
+          vertical-align top
+          margin 0 12px
+        .score
+          display inline-block
+          vertical-align top
+          line-height 18px
+          font-size 12px
+          color: rgb(255, 153, 0)
+      .delivery_wrapper
+        font-size 0
+        .tittle
+          color rgb(7,17,27)
+          font-size 12px
+        .delivery
+          margin-left: 12px
+          font-size: 12px
+          color: rgb(147, 153, 159)
+  .ratings_wrapper
+      padding: 0 18px
+      .ratings_item
+        display: flex
+        padding: 18px 0
+        border_1px(rgba(7, 17, 27, 0.1))
+        .avatar
+          flex: 0 0 28px
+          width: 28px
+          margin-right: 12px
+          img
+            border-radius: 50%
+        .content
+          position: relative
+          flex: 1
+          .name
+            margin-bottom: 4px
+            line-height: 12px
+            font-size: 10px
+            color: rgb(7, 17, 27)
+          .star_wrapper
+            margin-bottom: 6px
+            font-size: 0
+            .star
+              display: inline-block
+              margin-right: 6px
+              vertical-align: top
+            .delivery
+              display: inline-block
+              vertical-align: top
+              line-height: 12px
+              font-size: 10px
+              color: rgb(147, 153, 159)
+          .text
+            margin-bottom: 8px
+            line-height: 18px
+            color: rgb(7, 17, 27)
+            font-size: 12px
+          .recommend
+            line-height: 16px
+            font-size: 0
+            .icon-thumb_up, .item
+              display: inline-block
+              margin: 0 8px 4px 0
+              font-size: 9px
+            .icon-thumb_up
+              color: rgb(0, 160, 220)
+            .item
+              padding: 0 6px
+              border: 1px solid rgba(7, 17, 27, 0.1)
+              border-radius: 1px
+              color: rgb(147, 153, 159)
+              background: #fff
+          .time
+            position: absolute
+            top: 0
+            right: 0
+            line-height: 12px
+            font-size: 10px
+            color: rgb(147, 153, 159)
 </style>
