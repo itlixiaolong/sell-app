@@ -62,7 +62,7 @@ import RatingSelect from '../RatingSelect/RatingSelect'
 import {formatDate} from '../../common/js/date'
 const ALL = 2
 const ERR_OK = 0
-const debug = process.env.NODE_ENV !== 'production'
+// const debug = process.env.NODE_ENV !== 'production'
 
 export default {
   props: {
@@ -111,7 +111,8 @@ export default {
     }
   },
   created () {
-    const url = debug ? '/ratings' : 'http://ustbhuangyi.com/sell/ratings'
+    // const url = debug ? '/ratings' : 'http://ustbhuangyi.com/sell/ratings'
+    const url = '/ratings'
     this.$http.get(url).then((response) => {
       if (response.body.errnumber === ERR_OK) {
         this.ratings = response.body.data
